@@ -1,15 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
+import { auth } from "@/app/firebase/config";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
+  const userSession = sessionStorage.getItem('user')
 
-  const handleSubmit = (event: any) => {
+    useEffect(() => {
+      if (userSession) {
+          router.push("/dashboard");
+      }
+  }, [userSession, router]);
+
+
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
-    // Handle login logic here (e.g., send a request to an authentication server)
+    try {
+      const res = await signInWithEmailAndPassword(email, password);
+      console.log(res);
+      setEmail("");
+      setPassword("");
+      sessionStorage.setItem('user', "user");
+      router.push("/dashboard");
+    } catch (error) {
+      alert(error);
+      return;
+    }
   };
 
   return (
@@ -54,8 +77,11 @@ export default function Home() {
             Login
           </button>
           <br />
-          <Link href="/signup" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 mt-2">
-              Go to Sign Up
+          <Link
+            href="/signup"
+            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 mt-2"
+          >
+            Go to Sign Up
           </Link>
         </form>
       </div>
